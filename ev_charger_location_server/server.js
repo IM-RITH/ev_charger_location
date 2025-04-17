@@ -1,33 +1,41 @@
-require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-
-// Routes
-// const authRoutes = require("./routes/auth");
-// const stationRoutes = require("./routes/stations");
+const config = require("./config");
+const routes = require("./routes"); // Main router
+const errorHandler = require("./middleware/errorHandler");
+const requestLogger = require("./middleware/requestLogger");
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(helmet());
-app.use(morgan("dev"));
+// --- Middleware ---
+// Enable CORS
+app.use(cors({ origin: config.corsOrigin })); // Use config for origin
+
+// Request logging
+app.use(requestLogger);
+
+// Body parsing (optional for this GET endpoint, but good practice)
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Database
+// --- API Routes ---
+// Mount all routes under /api
+app.use("/api", routes);
 
-// mongoose
-//   .connect(process.env.MONGODB_URI)
-//   .then(() => console.log("MongoDB connected"))
-//   .catch((err) => console.error(err));
+// --- Not Found Handler ---
+app.use((req, res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  error.statusCode = 404;
+  next(error);
+});
 
-// Routes
-// app.use("/api/auth", authRoutes);
-// app.use("/api/stations", stationRoutes);
+// --- Centralized Error Handler ---
+// Must be the last middleware
+app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// --- Start Server ---
+app.listen(config.port, () => {
+  console.log(`Backend server running on http://localhost:${config.port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`CORS Origin: ${config.corsOrigin}`);
+});

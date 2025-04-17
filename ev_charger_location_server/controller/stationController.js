@@ -1,4 +1,3 @@
-// backend/src/controllers/stationController.js
 const evChargerService = require("../api/evChargerService");
 
 const getStations = async (req, res, next) => {
@@ -29,7 +28,8 @@ const getStations = async (req, res, next) => {
       data: stations,
     }); // Send structured success response
   } catch (error) {
-    next(error); // Pass error to the error handling middleware
+    // Pass error to the error handling middleware
+    next(error);
   }
 };
 
